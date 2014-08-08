@@ -44,6 +44,8 @@ import static com.google.android.apps.common.testing.ui.espresso.Espresso.onData
 import static com.google.android.apps.common.testing.ui.espresso.Espresso.onView;
 import static com.google.android.apps.common.testing.ui.espresso.Espresso.pressBack;
 import static com.google.android.apps.common.testing.ui.espresso.Espresso.registerIdlingResources;
+import static com.google.android.apps.common.testing.ui.espresso.Espresso.openActionBarOverflowOrOptionsMenu;
+import static com.google.android.apps.common.testing.ui.espresso.Espresso.openContextualActionModeOverflowMenu;
 import static com.google.android.apps.common.testing.ui.espresso.action.ViewActions.click;
 import static com.google.android.apps.common.testing.ui.espresso.action.ViewActions.closeSoftKeyboard;
 import static com.google.android.apps.common.testing.ui.espresso.action.ViewActions.longClick;
@@ -1062,7 +1064,8 @@ public class Solo {
      */
 
     public void clickOnMenuItem(String text) {
-        onView(isRoot()).perform(ViewActions.pressKey(KeyEvent.KEYCODE_MENU));
+        openContextualActionModeOverflowMenu(); // openActionBarOverflowOrOptionsMenu();
+        // onView(isRoot()).perform(ViewActions.pressKey(KeyEvent.KEYCODE_MENU));
         onView(withRobotiumText(text, TextView.class)).perform(click());
     }
 
@@ -1075,8 +1078,9 @@ public class Solo {
 
     public void clickOnMenuItem(String text, boolean subMenu)
     {
-        //TODO: submenu does not work yet
-        onView(isRoot()).perform(ViewActions.pressKey(KeyEvent.KEYCODE_MENU));
+        // TODO: submenu does not work yet 
+        openContextualActionModeOverflowMenu(); // openActionBarOverflowOrOptionsMenu();
+        // onView(isRoot()).perform(ViewActions.pressKey(KeyEvent.KEYCODE_MENU));
         onView(withRobotiumText(text, TextView.class)).perform(click());
     }
 //
