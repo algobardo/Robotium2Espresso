@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import junit.framework.Assert;
 import junit.framework.AssertionFailedError;
 
+import android.util.Log;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.Instrumentation;
@@ -51,7 +52,6 @@ import static com.google.android.apps.common.testing.ui.espresso.action.ViewActi
 import static com.google.android.apps.common.testing.ui.espresso.action.ViewActions.longClick;
 import static com.google.android.apps.common.testing.ui.espresso.action.ViewActions.scrollTo;
 import static com.google.android.apps.common.testing.ui.espresso.action.ViewActions.typeText;
-import static com.google.android.apps.common.testing.ui.espresso.assertion.ViewAssertions.matches;
 import static com.google.android.apps.common.testing.ui.espresso.matcher.ViewMatchers.isClickable;
 import static com.google.android.apps.common.testing.ui.espresso.matcher.ViewMatchers.isDisplayed;
 import static com.google.android.apps.common.testing.ui.espresso.matcher.ViewMatchers.isEnabled;
@@ -60,6 +60,7 @@ import static com.google.android.apps.common.testing.ui.espresso.matcher.ViewMat
 import static com.google.android.apps.common.testing.ui.espresso.matcher.ViewMatchers.withTagKey;
 import static com.google.android.apps.common.testing.ui.espresso.matcher.ViewMatchers.withTagValue;
 import static com.google.android.apps.common.testing.ui.espresso.matcher.ViewMatchers.withText;
+import static com.google.android.apps.common.testing.ui.espresso.assertion.ViewAssertions.matches;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import com.robotium.solo.By;
@@ -69,16 +70,6 @@ import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
-
-/**
- * Main class for development of Robotium tests.
- * Robotium has full support for Views, WebViews, Activities, Dialogs, Menus and Context Menus.
- * <br>
- * Robotium can be used in conjunction with Android test classes like
- * ActivityInstrumentationTestCase2 and SingleLaunchActivityTestCase.
- *
- * @author Renas Reda, renas.reda@robotium.com
- */
 
 public class Solo {
 
@@ -273,6 +264,38 @@ public class Solo {
 
             @Override
             public void describeTo(Description description) {
+            }
+        };
+    }
+
+    private static ViewAction myCloseSoftKeyboard() {
+        return new ViewAction() {
+            /**
+             * The delay time to allow the soft keyboard to dismiss.
+             */
+            private static final long KEYBOARD_DISMISSAL_DELAY_MILLIS = 1000L;
+
+            /**
+             * The real {@link CloseKeyboardAction} instance.
+             */
+            private final ViewAction mCloseSoftKeyboard = closeSoftKeyboard();
+
+            @Override
+            public Matcher<View> getConstraints() {
+                return mCloseSoftKeyboard.getConstraints();
+            }
+
+            @Override
+            public String getDescription() {
+                return mCloseSoftKeyboard.getDescription();
+            }
+
+            @Override
+            public void perform(final UiController uiController, final View view) {
+                mCloseSoftKeyboard.perform(uiController, view);
+
+                // https://code.google.com/p/android-test-kit/issues/detail?id=79
+                uiController.loopMainThreadForAtLeast(KEYBOARD_DISMISSAL_DELAY_MILLIS);
             }
         };
     }
@@ -476,6 +499,7 @@ public class Solo {
                 )
             )
             .check(matches(isDisplayed()));
+            waitForIdle();
             return true;
         } catch (Error err) {
             return false;
@@ -504,13 +528,12 @@ public class Solo {
      * @return {@code true} if the {@link View} is displayed and {@code false} if it is not displayed before the timeout
      */
 
-    public boolean waitForView(int id, int minimumNumberOfMatches, int timeout){
+    public boolean waitForView(int id, int minimumNumberOfMatches, int timeout) {
         try {
             onView(withId(id)).check(matches(isDisplayed()));
             return true;
-        } catch(Error err){
-            return false;
-        } catch (Exception exc) {
+        } catch(Throwable t) {
+            Log.e("Solo", "waitForView(id=" + id + ", minimumNumberOfMatches=" + minimumNumberOfMatches + ", timeout=" + timeout + ")", t);
             return false;
         }
     }
@@ -542,9 +565,8 @@ public class Solo {
         try {
             onView(isnth(0, instanceOf(viewClass))).check(matches(isDisplayed()));
             return true;
-        } catch(Error err){
-            return false;
-        } catch (Exception exc) {
+        } catch(Throwable t) {
+            Log.e("Solo", "waitForView(viewClass=" + viewClass + ")", t);
             return false;
         }
         // return solo.waitForView(viewClass);
@@ -570,15 +592,16 @@ public class Solo {
      * @return {@code true} if the {@link View} is displayed and {@code false} if it is not displayed before the timeout
      */
 
-    public <T extends View> boolean waitForView(View view, int timeout, boolean scroll){
+    public <T extends View> boolean waitForView(View view, int timeout, boolean scroll) {
         // TODO: take care of the scroll!
+        Log.i("Solo", "sleep(2000)");
+        solo.sleep(2000);
         try {
             IdentityMatcher<View> m = new IdentityMatcher<View>(view);
             onView(m).perform(doNothing());
             return true;
-        } catch(Error err) {
-            return false;
-        } catch (Exception exc) {
+        } catch(Throwable t) {
+            Log.e("Solo", "waitForView(view=" + view + ", timeout=" + timeout + ", scroll=" + scroll + ")", t);
             return false;
         }
     }
@@ -592,7 +615,7 @@ public class Solo {
      * @return {@code true} if the {@link View} is displayed and {@code false} if it is not displayed before the timeout
      */
 
-    public <T extends View> boolean waitForView(final Class<T> viewClass, final int minimumNumberOfMatches, final int timeout){
+    public <T extends View> boolean waitForView(final Class<T> viewClass, final int minimumNumberOfMatches, final int timeout) {
         //TODO: Espressofy and take care of the minimum
         return solo.waitForView(viewClass, minimumNumberOfMatches, timeout);
      }
@@ -974,10 +997,13 @@ public class Solo {
      * Simulates pressing the hardware back key.
      */
 
-    public void goBack()
-    {
-        solo.hideSoftKeyboard();
+    public void goBack() {
+        // solo.hideSoftKeyboard();
+        solo.sleep(1000);
+        onView(isRoot()).perform(myCloseSoftKeyboard());
+        solo.sleep(1000);
         Espresso.pressBack();
+        solo.sleep(1000);
     }
 
     /**
@@ -2165,9 +2191,11 @@ public class Solo {
      * @return a {@link View} matching the specified id and index
      */
 
-    public View getView(int id, int index){
+    public View getView(int id, int index) {
         waitForIdle();
-        return solo.getView(id,index);
+        View result = solo.getView(id, index);
+        Log.i("Solo", "getView(id=" + id + ", index=" + index + ", result=" + result + ")");
+        return result;
     }
 
     /**
@@ -2177,7 +2205,7 @@ public class Solo {
      * @return a {@link View} matching the specified id
      */
 
-    public View getView(String id){
+    public View getView(String id) {
         return getView(id, 0);
     }
 
@@ -2189,9 +2217,11 @@ public class Solo {
      * @return a {@link View} matching the specified id and index
      */
 
-    public View getView(String id, int index){
+    public View getView(String id, int index) {
         waitForIdle();
-        return solo.getView(id,index);
+        View result = solo.getView(id, index);
+        Log.i("Solo", "getView(id=" + id + ", index=" + index + ", result=" + result + ")");
+        return result;
     }
 
     /**
@@ -2585,8 +2615,9 @@ public class Solo {
      * @return {@code true} if fragment appears and {@code false} if it does not appear before the timeout
      */
 
-    public boolean waitForFragmentById(int id){
-        onView(withId(id)).check(matches(isDisplayed()));
+    public boolean waitForFragmentById(int id) {
+        // CQA: This is not sound, in particular when it should return false!
+        waitForIdle();
         return true;
     }
 
@@ -2598,18 +2629,17 @@ public class Solo {
      * @return {@code true} if fragment appears and {@code false} if it does not appear before the timeout
      */
 
-    public boolean waitForFragmentById(int id, int timeout){
-        onView(withId(id)).check(matches(isDisplayed()));
+    public boolean waitForFragmentById(int id, int timeout) {
+        // CQA: This is not sound, in particular when it should return false!
+        waitForIdle();
         return true;
     }
 
-    public void waitForIdle()
-    {
+    public void waitForIdle() {
         onView(isRoot()).perform(doNothing());
     }
 
-    public void waitForIdleInject()
-    {
+    public void waitForIdleInject() {
         onView(isRoot()).perform(doNothing());
     }
 
