@@ -41,6 +41,7 @@ import com.google.android.apps.common.testing.ui.espresso.ViewAction;
 import com.google.android.apps.common.testing.ui.espresso.action.ViewActions;
 import com.robotium.solo.Condition;
 import com.google.android.apps.common.testing.ui.espresso.Espresso;
+import com.google.android.apps.common.testing.ui.espresso.ViewInteraction;
 import static com.google.android.apps.common.testing.ui.espresso.Espresso.onData;
 import static com.google.android.apps.common.testing.ui.espresso.Espresso.onView;
 import static com.google.android.apps.common.testing.ui.espresso.Espresso.pressBack;
@@ -165,7 +166,7 @@ public class Solo {
         };
     }
 
-    public static Matcher<View> withRobotiumText(final String text, final Class c) {
+    public static Matcher<View> withRobotiumText(final String text, final Matcher<? super View> m) {
         if (text == null) {
             IllegalArgumentException e = new IllegalArgumentException("Called withRobotiumText with text=null");
             e.fillInStackTrace();
@@ -177,8 +178,9 @@ public class Solo {
 
             @Override
             public boolean matchesSafely(View view) {
-                if (!c.isInstance(view))
+                if (!m.matches(view)) {
                     return false;
+                }
 
                 if (view instanceof TextView) {
                     Pattern pattern = null;
@@ -191,6 +193,7 @@ public class Solo {
                     TextView textView = (TextView) view;
 
                     if (pattern.matcher(textView.getText()).find()) {
+                        Log.i("Solo", "withRobotiumText(text=" + text + "): view=" + view.toString() + ", hash=" + System.identityHashCode(view));
                         return true;
                     }
 
@@ -228,7 +231,11 @@ public class Solo {
 
             @Override
             public boolean matchesSafely(View view) {
-                return m.matches(view) && index == count++;
+                if (m.matches(view)) {
+                    Log.i("Solo", "isnth(index=" + index + ", count=" + count + "): view=" + view.toString());
+                    return index == count++;
+                }
+                return false;
             }
 
             @Override
@@ -320,12 +327,12 @@ public class Solo {
      * Example of usage:
      * <pre>
      *  public void setUp() throws Exception {
-     *	Config config = new Config();
-     *	config.screenshotFileType = ScreenshotFileType.PNG;
-     *	config.screenshotSavePath = Environment.getExternalStorageDirectory() + "/Robotium/";
-     *	config.shouldScroll = false;
-     *	solo = new Solo(getInstrumentation(), config);
-     *	getActivity();
+     *  Config config = new Config();
+     *  config.screenshotFileType = ScreenshotFileType.PNG;
+     *  config.screenshotSavePath = Environment.getExternalStorageDirectory() + "/Robotium/";
+     *  config.shouldScroll = false;
+     *  solo = new Solo(getInstrumentation(), config);
+     *  getActivity();
      * }
      * </pre>
      *
@@ -441,7 +448,8 @@ public class Solo {
 
     public boolean waitForText(String text) {
         try {
-            onView(isnth(0, withRobotiumText(text, TextView.class))).check(matches(isDisplayed()));
+            onView(isnth(0, withRobotiumText(text, instanceOf(TextView.class))))
+            .check(matches(isDisplayed()));
             return true;
         } catch(Error err) {
             return false;
@@ -493,11 +501,7 @@ public class Solo {
         // TODO: Handle all parameters
         try {
             // -1 because of one -> zero indexing
-            onView(isnth(
-                    minimumNumberOfMatches == 0 ? 0 : minimumNumberOfMatches - 1,
-                    withRobotiumText(text, TextView.class)
-                )
-            )
+            onView(isnth(Math.max(0, minimumNumberOfMatches-1), withRobotiumText(text, instanceOf(TextView.class))))
             .check(matches(isDisplayed()));
             waitForIdle();
             return true;
@@ -563,7 +567,8 @@ public class Solo {
     public <T extends View> boolean waitForView(final Class<T> viewClass){
         //TODO: Espressofy it!
         try {
-            onView(isnth(0, instanceOf(viewClass))).check(matches(isDisplayed()));
+            onView(isnth(0, instanceOf(viewClass)))
+            .check(matches(isDisplayed()));
             return true;
         } catch(Throwable t) {
             Log.e("Solo", "waitForView(viewClass=" + viewClass + ")", t);
@@ -594,8 +599,6 @@ public class Solo {
 
     public <T extends View> boolean waitForView(View view, int timeout, boolean scroll) {
         // TODO: take care of the scroll!
-        Log.i("Solo", "sleep(2000)");
-        solo.sleep(2000);
         try {
             IdentityMatcher<View> m = new IdentityMatcher<View>(view);
             onView(m).perform(doNothing());
@@ -856,7 +859,8 @@ public class Solo {
     public boolean searchText(String text, int minimumNumberOfMatches, boolean scroll, boolean onlyVisible) {
         // return solo.searchText(text,minimumNumberOfMatches,scroll,onlyVisible);
         try {
-            onView(isnth(0, withRobotiumText(text, Object.class))).check(matches(isDisplayed()));
+            onView(isnth(0, withRobotiumText(text, instanceOf(Object.class))))
+            .check(matches(isDisplayed()));
             return true;
         } catch(Error err) {
             return false;
@@ -1060,7 +1064,13 @@ public class Solo {
      */
 
     public void clickOnButton(String text) {
-        onView(withRobotiumText(text, Button.class)).perform(click());
+        Log.i("Solo", "clickOnButton(text=" + text + "): check(), perform()");
+
+        onView(allOf(withRobotiumText(text, instanceOf(Button.class)), isDisplayed()))
+        .check(matches(allOf(isEnabled(), isClickable())))
+        .perform(click());
+
+        Log.i("Solo", "clickOnButton(text=" + text + "): end");
     }
 
     /**
@@ -1070,7 +1080,13 @@ public class Solo {
      */
 
     public void clickOnImageButton(int index) {
-        onView(isnth(index, allOf(instanceOf(ImageButton.class),isDisplayed()))).perform(click());
+        // Note: isnth() must not be used for both check() and perform(),
+        // so we create two matchers. Otherwise count is broken.
+        onView(isnth(index, allOf(instanceOf(ImageButton.class), isDisplayed())))
+        .check(matches(allOf(isEnabled(), isClickable())));
+
+        onView(isnth(index, allOf(instanceOf(ImageButton.class), isDisplayed())))
+        .perform(click());
     }
 //
 //    /**
@@ -1092,7 +1108,9 @@ public class Solo {
     public void clickOnMenuItem(String text) {
         openContextualActionModeOverflowMenu(); // openActionBarOverflowOrOptionsMenu();
         // onView(isRoot()).perform(ViewActions.pressKey(KeyEvent.KEYCODE_MENU));
-        onView(withRobotiumText(text, TextView.class)).perform(click());
+        onView(withRobotiumText(text, instanceOf(TextView.class)))
+        .check(matches(allOf(isEnabled(), isClickable())))
+        .perform(click());
     }
 
     /**
@@ -1107,7 +1125,9 @@ public class Solo {
         // TODO: submenu does not work yet 
         openContextualActionModeOverflowMenu(); // openActionBarOverflowOrOptionsMenu();
         // onView(isRoot()).perform(ViewActions.pressKey(KeyEvent.KEYCODE_MENU));
-        onView(withRobotiumText(text, TextView.class)).perform(click());
+        onView(withRobotiumText(text, instanceOf(TextView.class)))
+        .check(matches(allOf(isEnabled(), isClickable())))
+        .perform(click());
     }
 //
 //    /**
@@ -1205,8 +1225,7 @@ public class Solo {
      * A Negative number moves up on the {@link Spinner}, positive moves down
      */
 
-    public void pressSpinnerItem(int spinnerIndex, int itemIndex)
-    {
+    public void pressSpinnerItem(int spinnerIndex, int itemIndex) {
         solo.pressSpinnerItem(spinnerIndex,itemIndex);
     }
 
@@ -1217,7 +1236,9 @@ public class Solo {
      */
 
     public void clickOnView(final View view) {
-        onView(new IdentityMatcher<View>(view)).perform(click());
+        onView(new IdentityMatcher<View>(view))
+        .check(matches(allOf(isEnabled(), isClickable())))
+        .perform(click());
     }
 
     /**
@@ -1227,7 +1248,9 @@ public class Solo {
      * @param immediately {@code true} if View should be clicked without any wait
      */
 
-    public void clickOnView(View view, boolean immediately) { clickOnView(view);    }
+    public void clickOnView(View view, boolean immediately) {
+        clickOnView(view);
+    }
 
     /**
      * Long clicks the specified View.
@@ -1236,8 +1259,9 @@ public class Solo {
      */
 
     public void clickLongOnView(View view) {
-        IdentityMatcher<View> idm = new IdentityMatcher<View>(view);
-        onView(idm).perform(longClick());
+        onView(new IdentityMatcher<View>(view))
+        .check(matches(allOf(isEnabled(), isClickable())))
+        .perform(longClick());
     }
 
 //    /**
@@ -1281,8 +1305,19 @@ public class Solo {
      * @param scroll {@code true} if scrolling should be performed
      */
     public void clickOnText(String text, int match, boolean scroll) {
+        Log.i("Solo", "clickOnText(text=" + text + ", match=" + match + "): check(), perform()");
+
+        // Note: isnth() must not be used for both check() and perform(),
+        // so we create two matchers. Otherwise count is broken.
+
         // -1 because of 1 -> 0-indexing
-        onView(isnth(match - 1, allOf(withRobotiumText(text, TextView.class), isDisplayed()))).perform(click());
+        onView(isnth(match - 1, allOf(withRobotiumText(text, instanceOf(TextView.class)), isDisplayed())))
+        .check(matches(isEnabled()));
+
+        onView(isnth(match - 1, allOf(withRobotiumText(text, instanceOf(TextView.class)), isDisplayed())))
+        .perform(click());
+
+        Log.i("Solo", "clickOnText(text=" + text + ", match=" + match + "): end");
     }
 
     /**
@@ -1303,8 +1338,15 @@ public class Solo {
      */
 
     public void clickLongOnText(String text, int match) {
+        // Note: isnth() must not be used for both check() and perform(),
+        // so we create two matchers. Otherwise count is broken.
+
         // -1 because of 1 -> 0-indexing
-        onView(isnth(match - 1, withRobotiumText(text, TextView.class))).perform(longClick());
+        onView(isnth(match - 1, allOf(withRobotiumText(text, instanceOf(TextView.class)), isDisplayed())))
+        .check(matches(allOf(isEnabled(), isClickable())));
+
+        onView(isnth(match - 1, allOf(withRobotiumText(text, instanceOf(TextView.class)), isDisplayed())))
+        .perform(longClick());
     }
 //
 //    /**
@@ -1351,7 +1393,18 @@ public class Solo {
      * @param index the index of the {@link Button} to click. {@code 0} if only one is available
      */
     public void clickOnButton(int index) {
-        onView(isnth(index, allOf(instanceOf(Button.class), isDisplayed()))).perform(click());
+        Log.i("Solo", "clickOnButton(index=" + index + "): start()");
+
+        // Note: isnth() must not be used for both check() and perform(),
+        // so we create two matchers. Otherwise count is broken.
+
+        onView(isnth(index, allOf(instanceOf(Button.class), isDisplayed())))
+        .check(matches(allOf(isEnabled(), isClickable())));
+
+        onView(isnth(index, allOf(instanceOf(Button.class), isDisplayed())))
+        .perform(click());
+
+        Log.i("Solo", "clickOnButton(index=" + index + "): end");
     }
 //
 //    /**
@@ -1371,7 +1424,14 @@ public class Solo {
      */
 
     public void clickOnCheckBox(int index) {
-        onView(isnth(index, allOf(instanceOf(CheckBox.class), isDisplayed()))).perform(click());
+        // Note: isnth() must not be used for both check() and perform(),
+        // so we create two matchers. Otherwise count is broken.
+
+        onView(isnth(index, allOf(instanceOf(CheckBox.class), isDisplayed())))
+        .check(matches(allOf(isEnabled(), isClickable())));
+
+        onView(isnth(index, allOf(instanceOf(CheckBox.class), isDisplayed())))
+        .perform(click());
     }
 
     /**
@@ -1381,7 +1441,14 @@ public class Solo {
      */
 
     public void clickOnEditText(int index) {
-        onView(isnth(index, allOf(instanceOf(EditText.class),isDisplayed()))).perform(click());
+        // Note: isnth() must not be used for both check() and perform(),
+        // so we create two matchers. Otherwise count is broken.
+
+        onView(isnth(index, allOf(instanceOf(EditText.class), isDisplayed())))
+        .check(matches(allOf(isEnabled(), isClickable())));
+
+        onView(isnth(index, allOf(instanceOf(EditText.class), isDisplayed())))
+        .perform(click());
     }
 
     /**
@@ -1457,7 +1524,9 @@ public class Solo {
 
     public void clickOnActionBarItem(int id){
         // TODO: Should maybe be current activity instead of activity, if it is changed??
-        onView(withId(id)).perform(click());
+        onView(withId(id))
+        .check(matches(allOf(isEnabled(), isClickable())))
+        .perform(click());
         //waitForIdle();
         //solo.clickOnActionBarItem(id);
 
@@ -2032,7 +2101,14 @@ public class Solo {
      */
 
     public void clickOnImage(int index) {
-        onView(isnth(index, instanceOf(ImageView.class))).perform(click());
+        // Note: isnth() must not be used for both check() and perform(),
+        // so we create two matchers. Otherwise count is broken.
+
+        onView(isnth(index, allOf(instanceOf(ImageView.class), isDisplayed())))
+        .check(matches(allOf(isEnabled(), isClickable())));
+
+        onView(isnth(index, allOf(instanceOf(ImageView.class), isDisplayed())))
+        .perform(click());
     }
 
     /**
@@ -2054,7 +2130,6 @@ public class Solo {
      */
 
     public Button getButton(int index) {
-
         waitForIdle();
         return solo.getButton(index);
     }
@@ -2492,7 +2567,11 @@ public class Solo {
      */
 
     public void sendKey(int key) {
-        onView(isRoot()).perform(ViewActions.pressKey(key));
+        if (key == Solo.MENU) {
+            openContextualActionModeOverflowMenu();
+        } else {
+            onView(isRoot()).perform(ViewActions.pressKey(key));
+        }
     }
 
 //    /**
@@ -2866,6 +2945,4 @@ public class Solo {
     public void takeScreenshot(){
         onView(isRoot()).perform(takeScreenshot(solo));
     }
-
 }
-
