@@ -1067,7 +1067,7 @@ public class Solo {
         Log.i("Solo", "clickOnButton(text=" + text + "): check(), perform()");
 
         onView(allOf(withRobotiumText(text, instanceOf(Button.class)), isDisplayed()))
-        .check(matches(allOf(isEnabled(), isClickable())))
+        .check(matches(allOf(isEnabled())))
         .perform(click());
 
         Log.i("Solo", "clickOnButton(text=" + text + "): end");
@@ -1083,7 +1083,7 @@ public class Solo {
         // Note: isnth() must not be used for both check() and perform(),
         // so we create two matchers. Otherwise count is broken.
         onView(isnth(index, allOf(instanceOf(ImageButton.class), isDisplayed())))
-        .check(matches(allOf(isEnabled(), isClickable())));
+        .check(matches(allOf(isEnabled())));
 
         onView(isnth(index, allOf(instanceOf(ImageButton.class), isDisplayed())))
         .perform(click());
@@ -1108,8 +1108,9 @@ public class Solo {
     public void clickOnMenuItem(String text) {
         openContextualActionModeOverflowMenu(); // openActionBarOverflowOrOptionsMenu();
         // onView(isRoot()).perform(ViewActions.pressKey(KeyEvent.KEYCODE_MENU));
+
         onView(withRobotiumText(text, instanceOf(TextView.class)))
-        .check(matches(allOf(isEnabled(), isClickable())))
+        .check(matches(allOf(isEnabled())))
         .perform(click());
     }
 
@@ -1126,7 +1127,7 @@ public class Solo {
         openContextualActionModeOverflowMenu(); // openActionBarOverflowOrOptionsMenu();
         // onView(isRoot()).perform(ViewActions.pressKey(KeyEvent.KEYCODE_MENU));
         onView(withRobotiumText(text, instanceOf(TextView.class)))
-        .check(matches(allOf(isEnabled(), isClickable())))
+        .check(matches(allOf(isEnabled())))
         .perform(click());
     }
 //
@@ -1237,7 +1238,7 @@ public class Solo {
 
     public void clickOnView(final View view) {
         onView(new IdentityMatcher<View>(view))
-        .check(matches(allOf(isEnabled(), isClickable())))
+        .check(matches(allOf(isEnabled())))
         .perform(click());
     }
 
@@ -1260,7 +1261,7 @@ public class Solo {
 
     public void clickLongOnView(View view) {
         onView(new IdentityMatcher<View>(view))
-        .check(matches(allOf(isEnabled(), isClickable())))
+        .check(matches(allOf(isEnabled())))
         .perform(longClick());
     }
 
@@ -1343,7 +1344,7 @@ public class Solo {
 
         // -1 because of 1 -> 0-indexing
         onView(isnth(match - 1, allOf(withRobotiumText(text, instanceOf(TextView.class)), isDisplayed())))
-        .check(matches(allOf(isEnabled(), isClickable())));
+        .check(matches(allOf(isEnabled())));
 
         onView(isnth(match - 1, allOf(withRobotiumText(text, instanceOf(TextView.class)), isDisplayed())))
         .perform(longClick());
@@ -1399,7 +1400,7 @@ public class Solo {
         // so we create two matchers. Otherwise count is broken.
 
         onView(isnth(index, allOf(instanceOf(Button.class), isDisplayed())))
-        .check(matches(allOf(isEnabled(), isClickable())));
+        .check(matches(allOf(isEnabled())));
 
         onView(isnth(index, allOf(instanceOf(Button.class), isDisplayed())))
         .perform(click());
@@ -1428,7 +1429,7 @@ public class Solo {
         // so we create two matchers. Otherwise count is broken.
 
         onView(isnth(index, allOf(instanceOf(CheckBox.class), isDisplayed())))
-        .check(matches(allOf(isEnabled(), isClickable())));
+        .check(matches(allOf(isEnabled())));
 
         onView(isnth(index, allOf(instanceOf(CheckBox.class), isDisplayed())))
         .perform(click());
@@ -1445,7 +1446,7 @@ public class Solo {
         // so we create two matchers. Otherwise count is broken.
 
         onView(isnth(index, allOf(instanceOf(EditText.class), isDisplayed())))
-        .check(matches(allOf(isEnabled(), isClickable())));
+        .check(matches(allOf(isEnabled())));
 
         onView(isnth(index, allOf(instanceOf(EditText.class), isDisplayed())))
         .perform(click());
@@ -1525,7 +1526,7 @@ public class Solo {
     public void clickOnActionBarItem(int id){
         // TODO: Should maybe be current activity instead of activity, if it is changed??
         onView(withId(id))
-        .check(matches(allOf(isEnabled(), isClickable())))
+        .check(matches(allOf(isEnabled())))
         .perform(click());
         //waitForIdle();
         //solo.clickOnActionBarItem(id);
@@ -2105,7 +2106,7 @@ public class Solo {
         // so we create two matchers. Otherwise count is broken.
 
         onView(isnth(index, allOf(instanceOf(ImageView.class), isDisplayed())))
-        .check(matches(allOf(isEnabled(), isClickable())));
+        .check(matches(allOf(isEnabled())));
 
         onView(isnth(index, allOf(instanceOf(ImageView.class), isDisplayed())))
         .perform(click());
