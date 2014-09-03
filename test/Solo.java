@@ -16,6 +16,7 @@ import android.os.Environment;
 import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.webkit.WebView;
 import android.widget.AbsListView;
 import android.widget.Button;
@@ -954,15 +955,17 @@ public class Solo {
         solo.assertMemoryNotLow();
     }
 
-//    /**
-//     * Waits for a Dialog to open. Default timeout is 20 seconds.
-//     *
-//     * @return {@code true} if the {@link android.app.Dialog} is opened before the timeout and {@code false} if it is not opened
-//     */
-//
-//    public boolean waitForDialogToOpen() {
-//        return solo.waitForDialogToOpen();
-//    }
+    /**
+     * Waits for a Dialog to open. Default timeout is 20 seconds.
+     *
+     * @return {@code true} if the {@link android.app.Dialog} is opened before the timeout and {@code false} if it is not opened
+     */
+
+    public boolean waitForDialogToOpen() {
+        boolean result = solo.waitForDialogToOpen();
+        waitForIdle();
+        return result;
+    }
 
     /**
      * Waits for a Dialog to close. Default timeout is 20 seconds.
@@ -2561,6 +2564,15 @@ public class Solo {
     }
 
     /**
+     * Unlocks the lock screen.
+     */
+
+    public void unlockScreen(){
+        solo.unlockScreen();
+        waitForIdle();
+    }
+
+    /**
      * Sends a key: Right, Left, Up, Down, Enter, Menu or Delete.
      *
      * @param key the key to be sent. Use {@code Solo.}{@link #RIGHT}, {@link #LEFT}, {@link #UP}, {@link #DOWN},
@@ -2575,16 +2587,17 @@ public class Solo {
         }
     }
 
-//    /**
-//     * Returns to an Activity matching the specified name.
-//     *
-//     * @param name the name of the {@link Activity} to return to. Example is: {@code "MyActivity"}
-//     */
-//
-//    public void goBackToActivity(String name) {
-//        activityUtils.goBackToActivity(name);
-//    }
-//
+    /**
+     * Returns to an Activity matching the specified name.
+     *
+     * @param name the name of the {@link Activity} to return to. Example is: {@code "MyActivity"}
+     */
+
+    public void goBackToActivity(String name) {
+        solo.goBackToActivity(name);
+        waitForIdle();
+    }
+
     /**
      * Waits for an Activity matching the specified name. Default timeout is 20 seconds.
      *
