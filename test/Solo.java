@@ -594,8 +594,6 @@ public class Solo {
 
     public <T extends View> boolean waitForView(View view, int timeout, boolean scroll) {
         // TODO: take care of the scroll!
-        Log.i("Solo", "sleep(2000)");
-        solo.sleep(2000);
         try {
             IdentityMatcher<View> m = new IdentityMatcher<View>(view);
             onView(m).perform(doNothing());
