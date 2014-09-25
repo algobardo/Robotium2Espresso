@@ -1005,12 +1005,10 @@ public class Solo {
      */
 
     public void goBack() {
-        // solo.hideSoftKeyboard();
         solo.sleep(1000);
-        onView(isRoot()).perform(myCloseSoftKeyboard());
+        onView(isRoot()).perform(myCloseSoftKeyboard()); // solo.hideSoftKeyboard();
         solo.sleep(1000);
         Espresso.pressBack();
-        solo.sleep(1000);
     }
 
     /**
