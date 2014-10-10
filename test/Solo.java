@@ -55,6 +55,7 @@ import static com.google.android.apps.common.testing.ui.espresso.Espresso.openCo
 import static com.google.android.apps.common.testing.ui.espresso.action.ViewActions.click;
 import static com.google.android.apps.common.testing.ui.espresso.action.ViewActions.closeSoftKeyboard;
 import static com.google.android.apps.common.testing.ui.espresso.action.ViewActions.longClick;
+import static com.google.android.apps.common.testing.ui.espresso.action.ViewActions.doubleClick;
 import static com.google.android.apps.common.testing.ui.espresso.action.ViewActions.scrollTo;
 import static com.google.android.apps.common.testing.ui.espresso.action.ViewActions.pressKey;
 import static com.google.android.apps.common.testing.ui.espresso.action.ViewActions.typeText;
@@ -129,7 +130,7 @@ public class Solo {
         };
     }
 
-    private static ViewAction clickXY(final int x, final int y){
+    private static ViewAction clickXY(final int x, final int y) {
         return new GeneralClickAction(
             Tap.SINGLE,
             new CoordinatesProvider() {
@@ -1041,8 +1042,13 @@ public class Solo {
      * @param numberOfClicks the number of clicks to perform
      */
 
-//    public void clickOnScreen(float x, float y, int numberOfClicks) {
-//    }
+    public void clickOnScreen(float x, float y, int numberOfClicks) {
+        if (numberOfClicks == 1) {
+            clickOnScreen(x, y);
+        } else if (numberOfClicks == 2) {
+            onView(isRoot()).perform(clickXY(Math.round(x), Math.round(y)));
+        }
+    }
 
     /**
      * Long clicks the specified coordinates.
