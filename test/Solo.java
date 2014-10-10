@@ -1,10 +1,17 @@
 package android.test;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.IllegalArgumentException;
 import java.util.ArrayList;
+
 import junit.framework.Assert;
 
+import android.os.SystemClock;
+import android.os.Handler;
+import android.os.Message;
+import android.os.Looper;
+import android.os.MessageQueue;
 import android.util.Log;
 import android.app.Activity;
 import android.app.Fragment;
@@ -79,6 +86,8 @@ import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
 
 public class Solo {
+    public static final String TAG = "InstrumentedSolo";
+
     public final static int LANDSCAPE = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;   // 0
     public final static int PORTRAIT = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;     // 1
     public final static int RIGHT = KeyEvent.KEYCODE_DPAD_RIGHT;
@@ -321,67 +330,25 @@ public class Solo {
     public Solo(Instrumentation instrumentation, Activity activity) {
         this.activity = activity;
         this.inst = instrumentation;
-        solo = new com.robotium.solo.Solo(instrumentation,activity);
-    }
+        solo = new com.robotium.solo.Solo(instrumentation, activity);
 
-    /**
-     * Config class used to set the scroll behaviour, default timeouts, screenshot filetype and screenshot save path.
-     * <br> <br>
-     * Example of usage:
-     * <pre>
-     *  public void setUp() throws Exception {
-     *  Config config = new Config();
-     *  config.screenshotFileType = ScreenshotFileType.PNG;
-     *  config.screenshotSavePath = Environment.getExternalStorageDirectory() + "/Robotium/";
-     *  config.shouldScroll = false;
-     *  solo = new Solo(getInstrumentation(), config);
-     *  getActivity();
-     * }
-     * </pre>
-     *
-     * @author Renas Reda, renas.reda@robotium.com
-     */
+        // Register in Looper
+        try {
+            RuntimeException e = new RuntimeException();
+            e.fillInStackTrace();
+            Log.i(TAG, "Registering in Looper", e);
 
-    public static class Config {
+            Message msg = Message.obtain(null, 0, this);
 
-        /**
-         * The timeout length of the get, is, set, assert, enter and click methods. Default length is 10 000 milliseconds.
-         */
-        public int timeout_small = 10000;
-
-        /**
-         * The timeout length of the waitFor methods. Default length is 20 000 milliseconds.
-         */
-        public int timeout_large = 20000;
-
-        /**
-         * The screenshot save path. Default save path is /sdcard/Robotium-Screenshots/.
-         */
-        public String screenshotSavePath = Environment.getExternalStorageDirectory() + "/Robotium-Screenshots/";
-
-        /**
-         * The screenshot file type, JPEG or PNG. Use ScreenshotFileType.JPEG or ScreenshotFileType.PNG. Default file type is JPEG.
-         */
-        public ScreenshotFileType screenshotFileType = ScreenshotFileType.JPEG;
-
-        /**
-         * Set to true if the get, is, set, enter, type and click methods should scroll. Default value is true.
-         */
-        public boolean shouldScroll = true;
-
-        /**
-         * Set to true if JavaScript should be used to click WebElements. Default value is false.
-         */
-        public boolean useJavaScriptToClickWebElements = false;
-
-        /**
-         * The screenshot file type, JPEG or PNG.
-         *
-         * @author Renas Reda, renas.reda@robotium.com
-         *
-         */
-        public enum ScreenshotFileType {
-            JPEG, PNG
+            Field mQueueField = Looper.class.getDeclaredField("mQueue");
+            mQueueField.setAccessible(true);
+            Object mQueue = mQueueField.get(Looper.getMainLooper());
+            
+            Method enqueueMessageMethod = MessageQueue.class.getDeclaredMethod("enqueueMessage", Message.class, long.class);
+            enqueueMessageMethod.setAccessible(true);
+            enqueueMessageMethod.invoke(mQueue, msg, SystemClock.uptimeMillis());
+        } catch (Throwable t) {
+            Log.e(TAG, "Could not register in Looper", t);
         }
     }
 
@@ -392,8 +359,7 @@ public class Solo {
      */
 
     public Solo(Instrumentation instrumentation) {
-        this.inst = instrumentation;
-        solo = new com.robotium.solo.Solo(instrumentation);
+        this(instrumentation, null);
     }
 
 //    /**
