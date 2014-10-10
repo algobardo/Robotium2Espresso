@@ -121,7 +121,7 @@ public class Solo {
         }
     };
 
-    private static ViewAction doNothing(){
+    private static ViewAction doNothing(final String description) {
         return new ViewAction() {
             @Override
             public Matcher<View> getConstraints() {
@@ -130,7 +130,7 @@ public class Solo {
 
             @Override
             public String getDescription() {
-                return "Doing nothing";
+                return description == null ? "doing nothing" : description;
             }
 
             @Override
@@ -582,7 +582,7 @@ public class Solo {
         // TODO: take care of the scroll!
         try {
             IdentityMatcher<View> m = new IdentityMatcher<View>(view);
-            onView(m).perform(doNothing());
+            onView(m).perform(doNothing(null));
             return true;
         } catch(Throwable t) {
             Log.e("Solo", "waitForView(view=" + view + ", timeout=" + timeout + ", scroll=" + scroll + ")", t);
@@ -1051,7 +1051,7 @@ public class Solo {
 
     public void clickLongOnScreen(float x, float y, int time) {
         solo.clickLongOnScreen(x, y, time);
-        waitForIdleInject();
+        waitForIdleInject("clickLongOnScreen(x=" + x + ", y=" + y + ")");
     }
 
 
@@ -1062,13 +1062,9 @@ public class Solo {
      */
 
     public void clickOnButton(String text) {
-        Log.i("Solo", "clickOnButton(text=" + text + "): check(), perform()");
-
         onView(allOf(withRobotiumText(text, instanceOf(Button.class)), isDisplayed()))
         .check(matches(allOf(isEnabled())))
         .perform(click());
-
-        Log.i("Solo", "clickOnButton(text=" + text + "): end");
     }
 
     /**
@@ -1470,7 +1466,7 @@ public class Solo {
 
     public ArrayList<TextView> clickInList(int line) {
         ArrayList<TextView> result = solo.clickInList(line);
-        waitForIdleInject();
+        waitForIdleInject("clickInList(line=" + line + ")");
         return result;
     }
 
@@ -1485,7 +1481,7 @@ public class Solo {
 
     public ArrayList<TextView> clickInList(int line, int index) {
         ArrayList<TextView> result = solo.clickInList(line,index);
-        waitForIdleInject();
+        waitForIdleInject("clickInList(line=" + line + ", index=" + index + ")");
         return result;
     }
 //
@@ -1568,7 +1564,7 @@ public class Solo {
     public void drag(float fromX, float toX, float fromY, float toY,
                      int stepCount) {
         solo.drag(fromX, toX, fromY, toY, stepCount);
-        waitForIdleInject();
+        waitForIdleInject("drag(fromX=" + fromX + ", toX=" + toX + ", fromY=" + fromY + ", toY=" + toY + ")");
     }
 
     /**
@@ -1917,7 +1913,7 @@ public class Solo {
 
     public void setProgressBar(int index, int progress) {
         solo.setProgressBar(index, progress);
-        waitForIdleInject();
+        waitForIdleInject("setProgressBar(index=" + index + ", progress=" + progress + ")");
     }
 
     /**
@@ -1929,7 +1925,7 @@ public class Solo {
 
     public void setProgressBar(ProgressBar progressBar, int progress) {
         solo.setProgressBar(progressBar, progress);
-        waitForIdleInject();
+        waitForIdleInject("setProgressBar(progressBar=" + progressBar.toString() + ", progress=" + progress + ")");
     }
 
 //    /**
@@ -1976,8 +1972,8 @@ public class Solo {
     public void enterText(int index, String text) {
         // onView(isnth(index, instanceOf(EditText.class))).perform(typeText(text));
         waitForIdle();
-        solo.enterText(index, text); // TODO: should be 
-        waitForIdleInject();
+        solo.enterText(index, text);
+        waitForIdleInject("enterText(index=" + index + ", text=" + text + ")");
         waitForIdle();
     }
 
@@ -1992,7 +1988,7 @@ public class Solo {
         // onView(withId(editText.getId())).perform(typeText(text));
         waitForIdle();
         solo.enterText(editText, text); // TODO: should be onView(isEqual(editText)).perform(typeText(text));
-        waitForIdleInject();
+        waitForIdleInject("enterText(editText=" + editText.toString() + ", text=" + text + ")");
         waitForIdle();
     }
 
@@ -2080,7 +2076,7 @@ public class Solo {
     public void clearEditText(int index) {
         waitForIdle();
         solo.clearEditText(index);
-        waitForIdleInject();
+        waitForIdleInject("clearEditText(index=" + index + ")");
         waitForIdle();
     }
 
@@ -2093,7 +2089,7 @@ public class Solo {
     public void clearEditText(EditText editText) {
         waitForIdle();
         solo.clearEditText(editText);
-        waitForIdleInject();
+        waitForIdleInject("clearEditText(editText=" + editText.toString() + ")");
         waitForIdle();
     }
 //
@@ -2740,11 +2736,11 @@ public class Solo {
     }
 
     public void waitForIdle() {
-        onView(isRoot()).perform(doNothing());
+        onView(isRoot()).perform(doNothing(null));
     }
 
-    public void waitForIdleInject() {
-        onView(isRoot()).perform(doNothing());
+    public void waitForIdleInject(String description) {
+        onView(isRoot()).perform(doNothing(description));
     }
 
     /**
