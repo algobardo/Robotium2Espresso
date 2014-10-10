@@ -129,9 +129,17 @@ public class Solo {
         };
     }
 
-    private static ViewAction clickXY(final int x, final int y){
+    private static ViewAction clickXY(final int x, final int y) {
+        return clickOnScreen(Tap.SINGLE, x, y);
+    }
+
+    private static ViewAction longClickXY(final int x, final int y) {
+        return clickOnScreen(Tap.LONG, x, y);
+    }
+
+    private static ViewAction clickOnScreen(Tap tap, final int x, final int y) {
         return new GeneralClickAction(
-            Tap.SINGLE,
+            tap,
             new CoordinatesProvider() {
                 @Override
                 public float[] calculateCoordinates(View view) {
@@ -242,7 +250,7 @@ public class Solo {
 
             @Override
             public void describeTo(Description description) {
-                description.appendText("with index " + index +" of the following ones ");
+                description.appendText("is #" + index + " of ");
                 m.describeTo(description);
             }
         };
@@ -1051,8 +1059,9 @@ public class Solo {
      * @param y the y coordinate
      */
 
-//    public void clickLongOnScreen(float x, float y) {
-//    }
+    public void clickLongOnScreen(float x, float y) {
+        longClickXY(Math.round(x), Math.round(y));
+    }
 
     /**
      * Long clicks the specified coordinates for a specified amount of time.
