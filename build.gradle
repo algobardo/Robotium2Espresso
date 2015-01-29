@@ -17,7 +17,7 @@ allprojects {
 apply plugin: 'android-library'
 apply plugin: 'android-maven'
 
-group       = "dk.au.cs.thor"
+group       = "dk.au.cs.thor.robotium2espresso"
 version     = "1.0.0"
 status      = "release"
 description = "Robotium wrapper for Thor"
@@ -29,9 +29,6 @@ repositories {
 dependencies {
     compile 'com.jayway.android.robotium:robotium-solo:5.2.1'
     compile 'com.jakewharton.espresso:espresso:1.1-r3'
-    // compile ('com.jakewharton.espresso:espresso:1.1-r3') {
-    //    exclude group: 'org.hamcrest', module: 'hamcrest-core'
-    //}
 }
 
 android {
@@ -43,11 +40,9 @@ android {
     }
 }
 
-/*
 install {
     repositories.mavenInstaller {
         pom.version = project.version
-        pom.artifactId = "robotium-wrapper"
+        pom.artifactId = "robotium2espresso"
     }
 }
-*/

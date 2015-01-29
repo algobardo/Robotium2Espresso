@@ -1,6 +1,6 @@
-package android.widget;
+package dk.au.cs.thor.robotium2espresso.widgets;
 
-import android.test.Solo;
+import dk.au.cs.thor.robotium2espresso.Solo;
 
 import android.widget.Button;
 

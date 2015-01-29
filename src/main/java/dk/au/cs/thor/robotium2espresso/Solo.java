@@ -1,4 +1,4 @@
-package android.test;
+package dk.au.cs.thor.robotium2espresso;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
